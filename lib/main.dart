@@ -16,7 +16,7 @@ import 'package:e_esg/pages/IES/espace_admin.dart';
 import 'ChoosLanguage.dart';
 
 void main() {
-  runApp(const SideBarController());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatefulWidget {
@@ -53,7 +53,7 @@ class _MyAppState extends State<MyApp> {
         Locale('en')
       ],
       debugShowCheckedModeBanner: false,
-      home:const NavbarDoc(),
+      home: const SideBarController(),
     );
   }
 }

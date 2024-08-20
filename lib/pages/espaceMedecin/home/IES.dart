@@ -36,6 +36,7 @@ class _IesState extends State<Ies> {
   void initState() {
     super.initState();
     final ApiComsumer apiConsumer = DioConsumer(dio: Dio());
+    _liveList = LiveList(apiConsumer: apiConsumer);
     _fetchData();
   }
 

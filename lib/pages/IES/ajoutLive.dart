@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:searchfield/searchfield.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:dio/dio.dart';
+import 'package:intl/intl.dart'; 
 import 'package:e_esg/api/end_points.dart';
 import 'package:e_esg/models/live.dart';
 import 'package:e_esg/Data/doctor_list.dart';
@@ -22,21 +23,19 @@ class Ajoutlive extends StatefulWidget {
 
 class _AjoutliveState extends State<Ajoutlive> {
   final admin = Administrateur(
-  id: 1,
-  infoUser: Jeune('yas','Me',20,'F','2339998'));
+    id: 1,
+    infoUser: Jeune('yas', 'Me', 20, 'F', '2339998'),
+  );
   double turns = 0.0;
   Doctor? _selecteddoctor;
-
-
 
   bool isFocused = false;
   FocusNode _focusNode = FocusNode();
 
-
   TextEditingController _searchController = TextEditingController();
   TextEditingController _dateController = TextEditingController();
   TextEditingController _timeController = TextEditingController();
-
+  TextEditingController _streamYardLinkController = TextEditingController();
 
   List<Doctor> filteredDoctorList = [];
 
@@ -69,8 +68,7 @@ class _AjoutliveState extends State<Ajoutlive> {
         filteredDoctorList = doctorList;
       } else {
         filteredDoctorList = doctorList
-            .where((doctor) =>
-            doctor.name.toLowerCase().contains(_searchController.text.toLowerCase()))
+            .where((doctor) => doctor.name.toLowerCase().contains(_searchController.text.toLowerCase()))
             .toList();
       }
     });
@@ -81,6 +79,8 @@ class _AjoutliveState extends State<Ajoutlive> {
     _focusNode.dispose();
     _searchController.dispose();
     _dateController.dispose();
+    _timeController.dispose();
+    _streamYardLinkController.dispose();
     super.dispose();
   }
 
@@ -116,7 +116,7 @@ class _AjoutliveState extends State<Ajoutlive> {
     );
 
     if (pickedDate != null) {
-      _dateController.text = "${pickedDate.day}/${pickedDate.month}/${pickedDate.year}";
+      _dateController.text = DateFormat('dd/MM/yyyy').format(pickedDate);
     }
   }
 
@@ -143,29 +143,53 @@ class _AjoutliveState extends State<Ajoutlive> {
     }
   }
 
-  Future<void> submitLiveData(Live live) async {
-  final dio = Dio();
+  DateTime? parseDate(String dateString) {
+    final formats = [
+      'dd/MM/yyyy',
+      'MM/dd/yyyy',
+      'yyyy-MM-dd',
+      'yyyy/MM/dd',
+      'dd-MM-yyyy',
+    ];
 
-  try {
-    final response = await dio.post(
-      '${EndPoints.baseUrl}${EndPoints.createLive(1)}',
-      data: live.toJson(),
-      options: Options(headers: {
-        'Content-Type': 'application/json',
-      }),
-    );
-
-    if (response.statusCode == 200) {
-      print('Live ajouté avec succès');
-    } else {
-      print('Erreur de serveur: ${response.statusCode}');
-      print('Détails de l\'erreur: ${response.data}');
+    for (var format in formats) {
+      try {
+        return DateFormat(format).parseStrict(dateString);
+      } catch (e) {
+      }
     }
-  } catch (e) {
-    print('Erreur lors de l\'envoi de la requête: $e');
-  }
-}
 
+    return null;
+  }
+
+  Future<void> submitLiveData(Live live) async {
+    final dio = Dio();
+
+    try {
+      final response = await dio.post(
+        '${EndPoints.baseUrl}${EndPoints.createLive(1)}',
+        data: live.toJson(),
+        options: Options(headers: {
+          'Content-Type': 'application/json',
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        print('Live ajouté avec succès');
+         print('Réponse du serveur: ${response.data}');
+      } else {
+        print('Erreur de serveur: ${response.statusCode}');
+        print('Détails de l\'erreur: ${response.data}');
+      }
+    } catch (e) {
+      print('Erreur lors de l\'envoi de la requête: $e');
+    }
+  }
+
+  void _refreshLiveList() {
+  setState(() {
+  });
+}
 
   @override
   Widget build(BuildContext context) {
@@ -200,7 +224,7 @@ class _AjoutliveState extends State<Ajoutlive> {
                       ),
                     ),
                     SizedBox(height: 50),
-                    CustomTextField(title: "Sujet du live",height: 15,),
+                    CustomTextField(title: "Sujet du live", height: 15,),
                     Container(
                       padding: EdgeInsets.only(left: 20, right: 20, bottom: 20),
                       child: Column(
@@ -237,14 +261,14 @@ class _AjoutliveState extends State<Ajoutlive> {
                                     suggestions: filteredDoctorList
                                         .map(
                                           (e) => SearchFieldListItem<Doctor>(
-                                        e.name,
-                                        item: e,
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: Text(e.name),
-                                        ),
-                                      ),
-                                    )
+                                            e.name,
+                                            item: e,
+                                            child: Padding(
+                                              padding: const EdgeInsets.all(8.0),
+                                              child: Text(e.name),
+                                            ),
+                                          ),
+                                        )
                                         .toList(),
                                     searchInputDecoration: InputDecoration(
                                       focusedBorder: UnderlineInputBorder(
@@ -268,6 +292,7 @@ class _AjoutliveState extends State<Ajoutlive> {
                                     ),
                                     onSuggestionTap: (SearchFieldListItem<Doctor> suggestion) {
                                       setState(() {
+                                        _selecteddoctor = suggestion.item; 
                                         _focusNode.unfocus();
                                       });
                                     },
@@ -338,7 +363,7 @@ class _AjoutliveState extends State<Ajoutlive> {
                         ),
                       ),
                     ),
-                    CustomTextField(title: "Lien StreamYard",height: 15,),
+                    CustomTextField(title: "Lien StreamYard", height: 15,controller: _streamYardLinkController),
                     SizedBox(height: 30,),
                     Container(
                       padding: EdgeInsets.symmetric(horizontal: 15),
@@ -346,15 +371,15 @@ class _AjoutliveState extends State<Ajoutlive> {
                         children: [
                           Spacer(),
                           ElevatedButton(
-                            onPressed:(){
+                            onPressed: () {
                               Navigator.of(context).pop();
                             },
                             child: Text(
                               "Annuler",
-                              style:TextStyle(
+                              style: TextStyle(
                                   fontFamily: 'Poppins',
                                   fontWeight: FontWeight.w600,
-                                  fontSize: titleFontSize-5) ,
+                                  fontSize: titleFontSize - 5),
                             ),
                             style: ElevatedButton.styleFrom(
                               foregroundColor: Color(0xFF2E37A4),
@@ -371,32 +396,40 @@ class _AjoutliveState extends State<Ajoutlive> {
                           ),
                           SizedBox(width: 20,),
                           ElevatedButton(
-                            onPressed: (){
+                            onPressed: () {
                               final sujet = _searchController.text;
-                              final date = DateTime.parse(_dateController.text); // Supposons que la date soit saisie au format ISO8601
+                              final date = parseDate(_dateController.text);
+                              final timeString = _timeController.text;
+                              final timeParts = timeString.split(':');
                               final heure = TimeOfDay(
-                                hour: int.parse(_timeController.text.split(":")[0]),
-                                minute: int.parse(_timeController.text.split(":")[1]),
+                                hour: int.parse(timeParts[0]),
+                                minute: int.parse(timeParts[1]),
                               );
-                              final lienStreamYard = "Lien StreamYard";
-                              final doctor = _selecteddoctor; // Assurez-vous d'avoir un docteur sélectionné
+                              final lienStreamYard = _streamYardLinkController.text;
+                              final doctor = _selecteddoctor;
 
-                              final liveData = Live(
-                                subject: sujet,
-                                doctor: doctor!,
-                                date: date,
-                                hour: heure,
-                                liveLink: lienStreamYard,
-                                liveImage: 'votreImageLien', 
-                              );
-                              submitLiveData(liveData);
+                              if (date != null && doctor != null) {
+                                final liveData = Live(
+                                  subject: sujet,
+                                  doctor: doctor,
+                                  date: date,
+                                  hour: heure,
+                                   liveLink: lienStreamYard,
+                                  liveImage: 'votreImageLien',
+                                );
+                                submitLiveData(liveData).then((_) {
+                                  _refreshLiveList();
+                                });
+                              } else {
+                                print("Erreur: Veuillez vérifier la date ou le médecin sélectionné.");
+                              }
                             },
                             child: Text(
                               "Ajouter",
-                              style:TextStyle(
+                              style: TextStyle(
                                   fontFamily: 'Poppins',
                                   fontWeight: FontWeight.w600,
-                                  fontSize: titleFontSize-5) ,
+                                  fontSize: titleFontSize - 5),
                             ),
                             style: ElevatedButton.styleFrom(
                               foregroundColor: Colors.white,
@@ -404,9 +437,7 @@ class _AjoutliveState extends State<Ajoutlive> {
                               padding: EdgeInsets.all(15),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10),
-
                               ),
-
                             ),
                           ),
                         ],

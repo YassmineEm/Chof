@@ -32,6 +32,7 @@ import 'lives.dart';
   void initState() {
     super.initState();
     final ApiComsumer apiConsumer = DioConsumer(dio: Dio());
+    _liveList = LiveList(apiConsumer: apiConsumer);
     _fetchDataFuture = _liveList.fetchLiveData();
   }
   void addNewProposition(String subject) {

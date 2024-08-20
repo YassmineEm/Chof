@@ -40,15 +40,13 @@ class _AddPropositionDialogState extends State<AddPropositionDialog> {
   Future<void> _sendProposition(String proposition) async {
     try {
       final response = await Dio().post(
-        '${EndPoints.baseUrl}${EndPoints.AddSuggestedTheme(1)}', // Use appropriate endpoint and ID
+        '${EndPoints.baseUrl}${EndPoints.AddSuggestedTheme(1)}', 
         data: {'suggestion': proposition},
       );
 
       if (response.statusCode == 200) {
-        // Handle successful response
         print('Proposition added successfully');
       } else {
-        // Handle error response
         print('Failed to add proposition: ${response.statusMessage}');
       }
     } catch (e) {

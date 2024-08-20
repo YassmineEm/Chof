@@ -5,7 +5,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:e_esg/Widgets/custom_sliver_app_bar.dart';
 import 'package:e_esg/Data/live_list.dart';
 import 'package:e_esg/models/live.dart';
-import 'lives.dart'; // Import the live_list.dart file
+import 'lives.dart'; 
 import '../../models/doctor.dart';
 import '../../api/api_Comsumer.dart';
 import '../../api/Dio_Consumer.dart';
@@ -35,6 +35,7 @@ class _IesDoctorState extends State<IesDoctor> {
   void initState() {
     super.initState();
     final ApiComsumer apiConsumer = DioConsumer(dio: Dio());
+    _liveList = LiveList(apiConsumer: apiConsumer);
     _fetchData();
   }
 

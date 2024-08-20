@@ -2,7 +2,7 @@ import 'package:e_esg/pages/espaceMedecin/LoginSignUp/Cardi.dart';
 import 'package:flutter/material.dart';
 import 'package:e_esg/Widgets/custom_sliver_app_bar.dart';
 import 'package:e_esg/Widgets/search.dart';
-import 'package:e_esg/Data/live_list.dart'; // Import your data source
+import 'package:e_esg/Data/live_list.dart'; 
 import 'package:e_esg/models/live.dart';
 import 'live_informations_page.dart';
 import 'package:e_esg/models/doctor.dart'; 
@@ -21,13 +21,14 @@ class YourLives extends StatefulWidget {
 class _YourLivesState extends State<YourLives> {
   late LiveList _liveList;
   List<Live> _foundedLives = [];
-  double sectionPadding = 16.0; // Example padding value
-  double titleFontSize = 20.0; // Example font size value
+  double sectionPadding = 16.0; 
+  double titleFontSize = 20.0; 
 
   @override
   void initState() {
     super.initState();
     final ApiComsumer apiConsumer = DioConsumer(dio: Dio());
+    _liveList = LiveList(apiConsumer: apiConsumer);
     _fetchData();
   }
 

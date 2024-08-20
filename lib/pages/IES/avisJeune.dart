@@ -137,7 +137,6 @@ class _AvisjeuneState extends State<Avisjeune> {
       return;
     }
 
-    // Configure your Dio instance
     final dio = Dio();
 
     const apiUrl = 'http://192.168.1.2:8080/streams/1/opinions';

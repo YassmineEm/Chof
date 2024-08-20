@@ -28,6 +28,7 @@ class _EspaceProfessionnelState extends State<EspaceProfessionnel> {
   void initState() {
     super.initState();
     final ApiComsumer apiConsumer = DioConsumer(dio: Dio());
+    _liveList = LiveList(apiConsumer: apiConsumer);
     _fetchData();
   }
 

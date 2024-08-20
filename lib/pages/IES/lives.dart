@@ -26,6 +26,7 @@ class _LivesState extends State<Lives> {
   void initState() {
     super.initState();
     final ApiComsumer apiConsumer = DioConsumer(dio: Dio());
+    _liveList = LiveList(apiConsumer: apiConsumer);
     _fetchDataFuture = _liveList.fetchLiveData();
     _foundedLives = _liveList.allLives; 
   }

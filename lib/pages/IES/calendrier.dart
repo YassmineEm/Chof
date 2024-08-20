@@ -5,7 +5,6 @@ import 'package:e_esg/pages/IES/statistiques.dart';
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:e_esg/api/api_Comsumer.dart';
 import 'package:e_esg/Data/live_list.dart';
 import 'package:e_esg/models/live.dart';
 import 'live_informations_page.dart';
@@ -25,7 +24,7 @@ class CalendrierState extends State<Calendrier> {
   late final LiveList liveList;
   late CalendarView _view;
   final CalendarController _calendarController = CalendarController();
-  late LiveDataSource _dataSource;
+  late LiveDataSource _dataSource = LiveDataSource([]);
 
   @override
   void initState() {
