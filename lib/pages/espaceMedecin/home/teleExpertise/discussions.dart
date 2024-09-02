@@ -1,10 +1,15 @@
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:e_esg/api/end_points.dart';
+import 'package:e_esg/pages/espaceMedecin/home/teleExpertise/InvitationInfos.dart';
 import 'package:e_esg/pages/espaceMedecin/home/teleExpertise/plus_infos.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:intl/intl.dart' as intl;
+import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../LoginSignUp/Cardi.dart';
 
 class Discussions extends StatefulWidget {
@@ -22,6 +27,43 @@ class Discussions extends StatefulWidget {
 }
 
 class _DiscussionsState extends State<Discussions> {
+  List invitations = [];
+  List discussion = [];
+
+  Future<void> getInvitation() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool isDoc=prefs.getBool("isDoc")!;
+    String? token =isDoc? prefs.getString('tokenDoc'):prefs.getString('tokenInf');
+    final get = await api.get(EndPoints.GetInvitation, headers: {
+      "Authorization": "$token"
+    });
+    setState(() {
+      invitations = get;
+    });
+  }
+
+  Future<void> getDiscussionsViaId() async {
+    Set uniqueIds = {};
+    List newDiscussion = [];
+
+    for (dynamic invitation in invitations) {
+      if (!uniqueIds.contains(invitation["discussionId"])) {
+        uniqueIds.add(invitation["discussionId"]);
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        bool isDoc=prefs.getBool("isDoc")!;
+        String? token =isDoc? prefs.getString('tokenDoc'):prefs.getString('tokenInf');
+        final get = await api.get(EndPoints.GetDiscussionViaId + "/${invitation["discussionId"]}", headers: {
+          "Authorization": "$token"
+        });
+        newDiscussion.add(get);
+      }
+    }
+    setState(() {
+      discussion = newDiscussion;
+      discussion.reversed;
+    });
+  }
+
   Widget buildSegmentedControlItem(String text) {
     return Container(
       padding: const EdgeInsets.all(8),
@@ -37,6 +79,11 @@ class _DiscussionsState extends State<Discussions> {
     );
   }
 
+  Future<void> loadData() async {
+    await getInvitation();
+    await getDiscussionsViaId();
+  }
+
   int typeNoti = 0;
 
   bool isArabic(BuildContext context) {
@@ -44,25 +91,27 @@ class _DiscussionsState extends State<Discussions> {
   }
 
   @override
+  void initState() {
+    loadData();
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     double width = MediaQuery.of(context).size.width;
     double height = MediaQuery.of(context).size.height;
     final appLocalizations = AppLocalizations.of(context);
-    final textDirection = isArabic(context) ? TextDirection.rtl : TextDirection.ltr;
-
-    return Directionality(
-      textDirection: TextDirection.ltr,
-      child: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            automaticallyImplyLeading: true,
-            floating: true,
-            snap: true,
-            backgroundColor: Cardi.isDarkMode.value ? const Color(0xff141218) : Colors.white,
-            leading: Container(
-              alignment: Alignment.center,
-              height: 40,
-              width: 40,
+    return Scaffold(
+      appBar: AppBar(
+        surfaceTintColor: Colors.transparent,
+        backgroundColor: Cardi.isDarkMode.value ? const Color(0xff141218) : Colors.white,
+        centerTitle: false,
+        flexibleSpace: Stack(
+          children: [
+            Positioned(
+              left: 0,
+              bottom: 0,
+              top: 0,
               child: FloatingActionButton(
                 backgroundColor: Colors.transparent,
                 elevation: 0,
@@ -79,250 +128,273 @@ class _DiscussionsState extends State<Discussions> {
                 ),
               ),
             ),
+            // Other widgets in the flexibleSpace can go here if needed
+          ],
+        ),
+      ),
+
+
+      body: Column(
+        children: [
+          SizedBox(
+            width: width,
+            child: CupertinoSlidingSegmentedControl<int>(
+              padding: const EdgeInsets.all(4),
+              groupValue: typeNoti,
+              onValueChanged: (int? value) {
+                setState(() {
+                  typeNoti = value!;
+                });
+              },
+              children: {
+                0: buildSegmentedControlItem(appLocalizations!.myInvitations),
+                1: buildSegmentedControlItem(appLocalizations.discTermin),
+              },
+            ),
           ),
-          SliverToBoxAdapter(
-            child: Column(
-              children: [
-                SizedBox(
-                  width: width,
-                  child: CupertinoSlidingSegmentedControl<int>(
-                    padding: const EdgeInsets.all(4),
-                    groupValue: typeNoti,
-                    onValueChanged: (int? value) {
-                      setState(() {
-                        typeNoti = value!;
-                      });
+          SizedBox(height: height * 0.02),
+          Expanded(
+            child: typeNoti == 0
+                ? ListView.builder(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                itemCount: discussion.length,
+                itemBuilder: (context, index) {
+                  final item = discussion[index];
+                  return GestureDetector(
+                    onTap: () {
+                      showBarModalBottomSheet(
+                        context: context,
+                        builder: (context) {
+                          return Invitationinfos(
+                              titre: item["titre"],
+                              // motif: item["motif"],
+                              prenomPatient: item["prenomPatient"],
+                              nomPatient: item["nomPatient"],
+                              sexe: item["sexe"],
+                              age: item["age"],
+                              motifDeTeleExpertise: item["motifDeTeleExpertise"],
+                              antecedentsMedicaux: item["antecedentsMedicaux"],
+                              antecedentsChirurgicaux: item["antecedentsChirurgicaux"],
+                              habitude: item["habitudes"],
+                              descriptionDesHabitudes: item["descriptionDesHabitudes"],
+                              antecedentsFamiliaux: item["antecedentsFamiliaux"],
+                              descriptionEtatClinique: item["descriptionEtatClinique"],
+                              commentaireFichiers: item["commentaireFichiers"],
+                              genre: item["genre"],
+                              type: item["type"],
+                              date: item["date"],
+                              heure: item["heure"],
+                              status: item["status"],
+                              fichiersAtaches: item["fichiersAtaches"],
+                              specialitesDemandees: item["specialitesDemandees"]);
+
+                        },
+                      );
                     },
-                    children: {
-                      0: buildSegmentedControlItem(appLocalizations!.myInvitations),
-                      1: buildSegmentedControlItem(appLocalizations.discTermin),
-                    },
-                  ),
-                ),
-                SizedBox(height: height * 0.02),
-                typeNoti == 0
-                    ? Directionality(
-                  textDirection: textDirection,
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Cardi.isDarkMode.value ? const Color(0xe5212125) : const Color(0xfffbfbfd),
-                      border: Border.all(color: Cardi.isDarkMode.value ? Colors.white24 : Colors.black26),
-                    ),
-                    child: Column(
-                      children: [
-                        const ListTile(
-                          leading: CircleAvatar(child: Icon(CupertinoIcons.person)),
-                          title: Text(
-                            "simo",
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: Text("Chirurgien"),
-                        ),
-                        const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 10),
-                          child: Divider(),
-                        ),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            AutoSizeText(
-                              appLocalizations.motif + ":",
-                              style: GoogleFonts.aBeeZee(
-                                textStyle: const TextStyle(
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              child: AutoSizeText(
-                                "Discutons du cas d'un patient souffrant d'une irritation cutanée. Cette discussion abordera les causes potentielles.",
-                                style: GoogleFonts.aBeeZee(
-                                  textStyle: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.normal,
-                                    color: Color(0xff2e37a4),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 5),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            AutoSizeText(
-                              appLocalizations.date + ":",
-                              style: GoogleFonts.aBeeZee(
-                                textStyle: const TextStyle(
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              child: AutoSizeText(
-                                "09/04/2024",
-                                style: GoogleFonts.aBeeZee(
-                                  textStyle: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.normal,
-                                    color: Color(0xff21c6b7),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 5),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            AutoSizeText(
-                              appLocalizations.time + ":",
-                              style: GoogleFonts.aBeeZee(
-                                textStyle: const TextStyle(
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              child: AutoSizeText(
-                                "09:04",
-                                style: GoogleFonts.aBeeZee(
-                                  textStyle: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.normal,
-                                    color: Color(0xff21c6b7),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            CupertinoButton(
-                              child: Container(
-                                alignment: Alignment.center,
-                                height: height * 0.05,
-                                width: width * 0.3,
-                                decoration: BoxDecoration(
-                                  color: Colors.transparent,
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(color: Colors.red),
-                                ),
-                                child: AutoSizeText(
-                                  appLocalizations.refuser,
-                                  style: TextStyle(
-                                    color: Colors.red,
-                                  ),
-                                ),
-                              ),
-                              onPressed: () {},
-                            ),
-                            CupertinoButton(
-                              child: Container(
-                                alignment: Alignment.center,
-                                height: height * 0.05,
-                                width: width * 0.3,
-                                decoration: BoxDecoration(
-                                  color: Colors.green,
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: AutoSizeText(
-                                  appLocalizations.accepter,
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                              onPressed: () {},
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                )
-                    : GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      CupertinoPageRoute(builder: (context) => PlusInfos()),
-                    );
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    decoration: BoxDecoration(
-                      color: Cardi.isDarkMode.value ? const Color(0xe5212125) : const Color(0xfffbfbfd),
-                      border: Border.all(color: Cardi.isDarkMode.value ? Colors.white24 : Colors.black26),
-                    ),
-                    child: Directionality(
-                      textDirection: isArabic(context)?TextDirection.rtl:TextDirection.ltr,
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Cardi.isDarkMode.value ? const Color(0xe5212125) : const Color(0xfffbfbfd),
+                        border: Border.all(color: Cardi.isDarkMode.value ? Colors.white24 : Colors.black26),
+                      ),
                       child: Column(
                         children: [
-                          const ListTile(
-                            leading: CircleAvatar(child: Icon(CupertinoIcons.person, size: 20)),
+                          ListTile(
+                            leading: CircleAvatar(child: Icon(CupertinoIcons.person)),
                             title: Text(
-                              "simo",
+                              (item["medcinResponsable"]["nom"]).toString(),
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
-                            subtitle: AutoSizeText("Chirurgien"),
+                            subtitle: Text((item["medcinResponsable"]["specialite"]).toString()),
                           ),
                           const Padding(
                             padding: EdgeInsets.symmetric(horizontal: 10),
                             child: Divider(),
                           ),
-                          Hero(
-                            tag: "motif",
-                            child: Material(
-                              color: Colors.transparent,
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    appLocalizations.motif + ": ",
-                                    style: GoogleFonts.aBeeZee(
-                                      textStyle: const TextStyle(
-                                        fontSize: 17,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              AutoSizeText(
+                                appLocalizations.motif + ":",
+                                style: GoogleFonts.aBeeZee(
+                                  textStyle: const TextStyle(
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.bold,
                                   ),
-                                  Expanded(
-                                    child: Text(
-                                      "Discutons du cas d'un patient souffrant d'une irritation cutanée. Cette discussion abordera les causes potentielles.",
-                                      style: GoogleFonts.aBeeZee(
-                                        textStyle: const TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.normal,
-                                          color: Color(0xff2e37a4),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                                ),
                               ),
-                            ),
+                              Expanded(
+                                child: AutoSizeText(
+                                  (item["motifDeTeleExpertise"]).toString(),
+                                  style: GoogleFonts.aBeeZee(
+                                    textStyle: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.normal,
+                                      color: Color(0xff2e37a4),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                          Align(
-                            alignment: Alignment.bottomRight,
-                            child: Text(appLocalizations.more),
+                          const SizedBox(height: 5),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              AutoSizeText(
+                                appLocalizations.date + ":",
+                                style: GoogleFonts.aBeeZee(
+                                  textStyle: const TextStyle(
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: AutoSizeText(
+                                  intl.DateFormat('yyyy-MM-dd').format(DateTime.parse(item["date"])),
+                                  style: GoogleFonts.aBeeZee(
+                                    textStyle: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.normal,
+                                      color: Color(0xff21c6b7),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 5),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              AutoSizeText(
+                                appLocalizations.time + ":",
+                                style: GoogleFonts.aBeeZee(
+                                  textStyle: const TextStyle(
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: AutoSizeText(
+                                  (item["heure"]),
+                                  style: GoogleFonts.aBeeZee(
+                                    textStyle: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.normal,
+                                      color: Color(0xff21c6b7),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              CupertinoButton(
+                                child: Container(
+                                  alignment: Alignment.center,
+                                  height: height * 0.05,
+                                  width: width * 0.3,
+                                  decoration: BoxDecoration(
+                                    color: Colors.transparent,
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(color: Colors.red),
+                                  ),
+                                  child: AutoSizeText(
+                                    appLocalizations.refuser,
+                                    style: const TextStyle(
+                                      color: Colors.red,
+                                    ),
+                                  ),
+                                ),
+                                onPressed: () async {
+                                  SharedPreferences prefs = await SharedPreferences.getInstance();
+                                  String? token = prefs.getString('tokenDoc');
+                                  api.put("/invitation/${invitations[index]["id"]}/decline", headers: {"Authorization": "$token"});
+                                },
+                              ),
+                              CupertinoButton(
+                                child: Container(
+                                  alignment: Alignment.center,
+                                  height: height * 0.05,
+                                  width: width * 0.3,
+                                  decoration: BoxDecoration(
+                                    color: Colors.green,
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: AutoSizeText(
+                                    appLocalizations.accepter,
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                                onPressed: () async {
+                                  SharedPreferences prefs = await SharedPreferences.getInstance();
+                                  String? token = prefs.getString('tokenDoc');
+                                  api.put("/invitation/${invitations[index]["id"]}/accept", headers: {"Authorization": "$token"});
+                                },
+                              ),
+                            ],
                           ),
                         ],
                       ),
                     ),
-                  ),
+                  );
+                })
+                : Column(
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                    Navigator.push(
+                      context,
+                      CupertinoPageRoute(builder: (context) => PlusInfos()),
+                    );
+                    },
+                      child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+                    decoration: BoxDecoration(
+                      color: Cardi.isDarkMode.value ? const Color(0xe5212125) : const Color(0xfffbfbfd),
+                      border: Border.all(color: Cardi.isDarkMode.value ? Colors.white24 : Colors.black26),
+                    ),
+                    child: Row(
+                      children: [
+                        const CircleAvatar(child: Icon(CupertinoIcons.person)),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'simo',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Cardi.isDarkMode.value ? Colors.white : Colors.black,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Chirurgien',
+                                style: TextStyle(
+                                  color: Cardi.isDarkMode.value ? Colors.white60 : Colors.black87,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Icon(CupertinoIcons.chevron_right),
+                      ],
+                    ),
+                      ),
+                    ),
+                  ],
                 ),
-                SizedBox(height: height * 0.1),
-              ],
-            ),
           ),
+          SizedBox(height: height*0.1,)
         ],
       ),
     );

@@ -1,9 +1,6 @@
-import 'dart:convert';
-import 'package:e_esg/Widgets/NavigationBarPro.dart';
 import 'package:e_esg/api/end_points.dart';
 import 'package:e_esg/api/errors/Exceptions.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:http/http.dart' as http;
 
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:e_esg/Widgets/NavigationBarDoctor.dart';
@@ -12,14 +9,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_svg/svg.dart';
 
-import '../../../api.dart';
 import '../../IES/statistiques.dart';
 import 'Cardi.dart';
 
 class Password extends StatefulWidget {
   final Function(double, double) onBackTapped;
+  final Function(double, double) onConfirmTapped;
 
-  Password({super.key, required this.onBackTapped});
+  Password({super.key, required this.onBackTapped,required this.onConfirmTapped});
 
   @override
   State<Password> createState() => _PasswordState();
@@ -299,7 +296,7 @@ class _PasswordState extends State<Password> {
                   if (passwordController.text == copasswordController.text) {
                     if (validatePassword(passwordController.text)) {
                       try {
-                        final response =await api.post(
+                        await api.post(
                           EndPoints.RegisterInfermier,
                           data:{
                             "cin": CardiInf.cinController.text,
@@ -311,13 +308,11 @@ class _PasswordState extends State<Password> {
                               "mail": CardiInf.emailController.text,
                               "motDePasse": passwordController.text
                             }
-                          }
+                          },
+                            headers: {}
                         );
                         Fluttertoast.showToast(msg: "success",backgroundColor: Colors.greenAccent,textColor: Colors.black);
-                        Navigator.pushAndRemoveUntil(
-                          context,
-                          MaterialPageRoute(builder: (context)=>NavbarDoc()),
-                              (Route<dynamic> route) => false,);
+                        widget.onConfirmTapped(0.55, 0.25);
                       } on ServerException catch (e) {
                         print("dfffffffffffffffffffffffffffffffffffffffffffffffffffff");
                         Fluttertoast.showToast(msg: e.errormodel.errorMsg,backgroundColor: Colors.red);

@@ -25,11 +25,12 @@ class CalendrierState extends State<Calendrier> {
   late CalendarView _view;
   final CalendarController _calendarController = CalendarController();
   late LiveDataSource _dataSource = LiveDataSource([]);
+  final String adminToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...';
 
   @override
   void initState() {
     super.initState();
-    liveList = LiveList(apiConsumer: DioConsumer(dio: Dio()));
+    liveList = LiveList(apiConsumer: DioConsumer(dio: Dio()) ,token: adminToken);
     _view = CalendarView.month;
     _calendarController.view = _view;
     _loadLiveData();

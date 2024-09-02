@@ -1,14 +1,10 @@
-import 'dart:convert';
-
 import 'package:auto_size_text/auto_size_text.dart';
-import 'package:e_esg/api.dart';
 import 'package:e_esg/api/end_points.dart';
 import 'package:e_esg/api/errors/Exceptions.dart';
 import 'package:e_esg/pages/espacejeune/login_signup/Cardi.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:http/http.dart' as http;
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class ConfirmInformations extends StatefulWidget {
@@ -168,10 +164,12 @@ class _ConfirmInformationsState extends State<ConfirmInformations> {
                           "sexe": CardiJeune.value==2?"MASCULIN":"FEMININ",
                           "dateNaissance": CardiJeune.birthDay,
                           "scolarise": true,
-                          "cin": CardiJeune.cinController.text,
-                          "niveauEtudeActuel": "SUPERIEUR",
-                          "cne": CardiJeune.cneController.text
+                          if(CardiJeune.age>=16)"cin": CardiJeune.cinController.text,
+                          "niveauEtudeActuel": convertToUpperCase(CardiJeune.studActu),
+                          if(CardiJeune.studActu == 'Primaire')"codeMassare":CardiJeune.codemassarController.text
+                          else "cne": CardiJeune.cneController.text
                         },
+                        headers: {},
                       );
                       widget.onConfirmTapped(0.6, 0.1);
                     } on ServerException catch (e) {
@@ -234,10 +232,11 @@ class _ConfirmInformationsState extends State<ConfirmInformations> {
                           "sexe": CardiJeune.value==2?"MASCULIN":"FEMININ",
                           "dateNaissance": CardiJeune.birthDay,
                           "scolarise": false,
-                          "cin": CardiJeune.cinController.text,
-                          "niveauEtudeActuel": "SUPERIEUR",
-                          "cne": CardiJeune.cneController.text
+                          if(CardiJeune.age>=16)"cin": CardiJeune.cinController.text,
+                          "derniereNiveauEtudes": convertToUpperCase(CardiJeune.lastStud),
+                          "enActivite": CardiJeune.stateActu=='En activité'
                         },
+                        headers: {},
                       );
                       widget.onConfirmTapped(0.6, 0.1);
                     } on ServerException catch (e) {

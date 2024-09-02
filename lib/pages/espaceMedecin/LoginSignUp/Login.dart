@@ -192,12 +192,18 @@ class _LoginState extends State<Login> {
                         "username": _identifierController.text,
                         "password": _passwordController.text
                       },
+                        headers: {}
+
                     );
                     userDoc=SigninModeldoc.fromJson(response);
                     SharedPreferences prefs = await SharedPreferences.getInstance();
                     prefs.setString('tokenDoc', "Bearer ${userDoc!.token}");
                     final decodedToken= JwtDecoder.decode(userDoc!.token);
-                    print(decodedToken);
+                    prefs.setInt('IdDoc', decodedToken["claims"]["id"]);
+                    int? id= prefs.getInt("IdDoc");
+                    prefs.setBool('isDoc', true);
+
+                    print(id);
                     Navigator.pushAndRemoveUntil(
                       context,
                       MaterialPageRoute(builder: (context)=>NavbarDoc()),

@@ -43,7 +43,6 @@ class Live extends Appointment {
     );
   }
 
-  // Méthode toJson pour convertir un objet Live en JSON
   Map<String, dynamic> toJson() {
     return {
       'subject': subject,

@@ -38,19 +38,19 @@ class DioConsumer extends ApiComsumer {
       return response.data;
     } on DioException catch (e) {
       handleDioException(e);
-      rethrow;
     }
   }
 
 
 
   @override
-  patch(String path, {Object? data, Map<String, dynamic>? queryParameters}) async {
+  patch(String path, {Object? data, Map<String, dynamic>? queryParameters,required Map<String, dynamic> headers}) async {
     try {
       final response = await dio.patch(
         path,
         data: data,
         queryParameters: queryParameters,
+        options: Options(headers: headers),
       );
       return response.data;
     } on DioException catch (e) {
@@ -59,12 +59,28 @@ class DioConsumer extends ApiComsumer {
   }
 
   @override
-  post(String path, {Object? data, Map<String, dynamic>? queryParameters}) async {
+  post(String path, {Object? data, Map<String, dynamic>? queryParameters, Map<String, dynamic>? headers}) async {
     try {
       final response = await dio.post(
         path,
         data: data,
         queryParameters: queryParameters,
+        options: Options(headers: headers),
+      );
+      return response.data;
+    } on DioException catch (e) {
+      handleDioException(e);
+    }
+  }
+
+  @override
+  put(String path, {Object? data, Map<String, dynamic>? queryParameters, Map<String, dynamic>? headers}) async {
+    try {
+      final response = await dio.put(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+        options: Options(headers: headers),
       );
       return response.data;
     } on DioException catch (e) {

@@ -8,6 +8,8 @@ import 'package:e_esg/Widgets/search.dart';
 import 'package:e_esg/models/live.dart';
 import '../espacejeune/SideBar/Settings.dart';
 import 'live_informations_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 class Lives extends StatefulWidget {
   const Lives({super.key});
 
@@ -21,34 +23,50 @@ class _LivesState extends State<Lives> {
   List<Live> _foundedLives = [];
   double sectionPadding = 16.0;
   double titleFontSize = 20.0;
+  String? token;
+
+  Future<void> initialize() async {
+    token = await getToken();
+    final ApiComsumer apiConsumer = DioConsumer(dio: Dio());
+    _liveList = LiveList(apiConsumer: apiConsumer, token: token);
+    await _liveList.fetchLiveData();
+    setState(() {
+      _foundedLives = _liveList.allLives;
+    });
+  }
+
+  Future<String?> getToken() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString('token');
+  }
 
   @override
   void initState() {
     super.initState();
-    final ApiComsumer apiConsumer = DioConsumer(dio: Dio());
-    _liveList = LiveList(apiConsumer: apiConsumer);
-    _fetchDataFuture = _liveList.fetchLiveData();
-    _foundedLives = _liveList.allLives; 
+    initialize();
   }
 
   void onSearch(String search) {
     setState(() {
-      _foundedLives =  _liveList.allLives.where((live) {
+      _foundedLives = _liveList.allLives.where((live) {
         return live.subject.toLowerCase().contains(search.toLowerCase());
       }).toList();
     });
   }
-  double width=0;
-  double height=0;
+
+  double width = 0;
+  double height = 0;
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
 
-    width=screenWidth;
-    height=screenHeight;
+    width = screenWidth;
+    height = screenHeight;
+
     return Scaffold(
-      backgroundColor: SettingsYong.isDarkMode.value?Color(0xff141218):Color(0xffF5F5F6),
+      backgroundColor: SettingsYong.isDarkMode.value ? Color(0xff141218) : Color(0xffF5F5F6),
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
@@ -58,7 +76,7 @@ class _LivesState extends State<Lives> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(height:40),
+                    SizedBox(height: 40),
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 20.0),
                       child: Center(
@@ -67,12 +85,12 @@ class _LivesState extends State<Lives> {
                           style: TextStyle(
                             fontFamily: 'Poppins',
                             fontWeight: FontWeight.w700,
-                            fontSize: titleFontSize+10,
+                            fontSize: titleFontSize + 10,
                           ),
                         ),
                       ),
                     ),
-                    SizedBox(height: 10,),
+                    SizedBox(height: 10),
                     CustomSearch(
                       hintText: 'Rechercher lives',
                       onchanged: (value) => onSearch(value),
@@ -84,7 +102,7 @@ class _LivesState extends State<Lives> {
             ),
             SliverList(
               delegate: SliverChildBuilderDelegate(
-                    (context, index) {
+                (context, index) {
                   return liveComponent(live: _foundedLives[index]);
                 },
                 childCount: _foundedLives.length,
@@ -95,6 +113,7 @@ class _LivesState extends State<Lives> {
       ),
     );
   }
+
   Widget liveComponent({required Live live}) {
     return GestureDetector(
       onTap: () => Navigator.push(
@@ -106,9 +125,9 @@ class _LivesState extends State<Lives> {
       ),
       child: Container(
         width: 280,
-        margin: EdgeInsets.all( 8),
+        margin: EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: SettingsYong.isDarkMode.value?Colors.black26.withOpacity(0.01):Colors.white,
+          color: SettingsYong.isDarkMode.value ? Colors.black26.withOpacity(0.01) : Colors.white,
           borderRadius: BorderRadius.circular(10),
           boxShadow: [
             BoxShadow(
@@ -133,7 +152,7 @@ class _LivesState extends State<Lives> {
               ),
             ),
             Container(
-              padding: EdgeInsets.only(left: 5, right: 5, top: 7),
+              padding: EdgeInsets.symmetric(horizontal: 5, vertical: 7),
               child: Text(
                 live.subject,
                 maxLines: 2,
@@ -170,5 +189,4 @@ class _LivesState extends State<Lives> {
       ),
     );
   }
-
 }

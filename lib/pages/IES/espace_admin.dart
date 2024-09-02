@@ -22,7 +22,6 @@ class EspaceAdmin extends StatefulWidget {
 }
 
 class _EspaceAdminState extends State<EspaceAdmin> {
-  final ApiComsumer apiConsumer = DioConsumer(dio: Dio());
   late LiveList liveList;
   late List<Live> thisWeekLives;
   late List<Live> allLives;
@@ -30,12 +29,14 @@ class _EspaceAdminState extends State<EspaceAdmin> {
   double sectionPadding=0;
   double titleFontSize =0;
   double iconFontSize =0;
+  final String adminToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...';
 
 
   @override
   void initState() {
     super.initState();
-    liveList = LiveList(apiConsumer: apiConsumer);
+    final ApiComsumer apiConsumer = DioConsumer(dio: Dio());
+    liveList = LiveList(apiConsumer: apiConsumer , token: adminToken);
     fetchLives();
   }
 

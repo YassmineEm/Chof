@@ -1,8 +1,6 @@
 import 'package:e_esg/pages/espacejeune/login_signup/Cardi.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-
 import 'docMedical01.dart';
 import 'docMedical02.dart';
 import 'docMedical03.dart';
@@ -45,7 +43,6 @@ class _DocMedicalState extends State<DocMedical> {
   @override
   Widget build(BuildContext context) {
     double height = MediaQuery.of(context).size.height;
-    final appLocalizations = AppLocalizations.of(context);
     return SafeArea(
       child: Scaffold(
         resizeToAvoidBottomInset: true,

@@ -5,10 +5,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:e_esg/Data/allergiAlimentaire_list.dart';
-import 'package:e_esg/Data/allergieMedicam_list.dart';
-import 'package:e_esg/Data/allergieEnvi_list.dart';
 
+import 'data.dart';
 class Docmedical03 extends StatefulWidget {
   const Docmedical03({super.key});
 
@@ -27,10 +25,10 @@ class _Docmedical03State extends State<Docmedical03> {
     "Hypertension artérielle (tension)",
     "Cancer",
     "Maladie cardio-vasculaire",
-    "aucune",
     "autre"
   ];
-  static List<bool> selectedConditions = [false, false, false, false, false,false];
+
+  static List<bool> selectedConditions = [false, false, false, false,false];
 
   @override
   void initState() {
@@ -52,7 +50,6 @@ class _Docmedical03State extends State<Docmedical03> {
   @override
   Widget build(BuildContext context) {
     final appLocalizations = AppLocalizations.of(context);
-    double width = MediaQuery.of(context).size.width;
     double height = MediaQuery.of(context).size.height;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -108,20 +105,26 @@ class _Docmedical03State extends State<Docmedical03> {
               label: Text(
                 conditions[index],
                 style: GoogleFonts.aBeeZee(
-                  color: selectedConditions[index] ? Colors.white : Colors.black,
+                  color: selectedConditions[index] ? Colors.white : CardiJeune.isDarkMode.value?Colors.white.withOpacity(0.5): Colors.black.withOpacity(0.5),
                 ),
               ),
               selected: selectedConditions[index],
               onSelected: (bool selected) {
                 setState(() {
                   selectedConditions[index] = selected;
+                  if(selected){
+                    maladiesFamiliales.add(conditions[index]);
+                  }else{
+                    maladiesFamiliales.remove(conditions[index]);
+                  }
+                  print(maladiesFamiliales);
                 });
               },
             );
           }),
         ),
         Visibility(
-          visible: selectedConditions[5],
+          visible: selectedConditions[4],
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -136,7 +139,7 @@ class _Docmedical03State extends State<Docmedical03> {
                 ),
               ),
               Container(
-                margin: EdgeInsets.only(top: 10),
+                margin: const EdgeInsets.only(top: 10),
                 height: 50,
                 child: CupertinoTextField(
                   controller: controller,
@@ -180,7 +183,7 @@ class _Docmedical03State extends State<Docmedical03> {
             Expanded(
               child: CupertinoButton(
                 child: Container(
-                  padding: EdgeInsets.all(10),
+                  padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(40),
                     border: Border.all(color: const Color(0xff4E57CD)),
@@ -200,7 +203,7 @@ class _Docmedical03State extends State<Docmedical03> {
             Expanded(
               child: CupertinoButton(
                 child: Container(
-                  padding: EdgeInsets.all(10),
+                  padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
                       colors: [Color(0xff4E57CD), Color(0xff2F38A5)],
@@ -214,6 +217,7 @@ class _Docmedical03State extends State<Docmedical03> {
                   ),
                 ),
                 onPressed: () {
+                  autre=controller.text;
                   DocMedical.setProgress(context, 0.75);
                   DocMedical.setIndex(context, 3);
                 },

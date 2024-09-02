@@ -14,6 +14,7 @@ import 'package:dio/dio.dart';
 import 'ajoutLive.dart';
 import 'live_informations_page.dart';
 import 'lives.dart';
+import 'package:shared_preferences/shared_preferences.dart';
  class EspaceJeune extends StatefulWidget {
    const EspaceJeune({super.key});
 
@@ -27,13 +28,26 @@ import 'lives.dart';
    double sectionPadding=0;
    double titleFontSize =0;
    double iconFontSize =0;
+   String? token;
+
+  Future<String?> getToken() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString('token');
+  }
 
   @override
   void initState() {
     super.initState();
+    initialize();
+  }
+
+  Future<void> initialize() async {
+    token = await getToken();
     final ApiComsumer apiConsumer = DioConsumer(dio: Dio());
-    _liveList = LiveList(apiConsumer: apiConsumer);
-    _fetchDataFuture = _liveList.fetchLiveData();
+    setState(() {
+      _liveList = LiveList(apiConsumer: apiConsumer, token: token);
+      _fetchDataFuture = _liveList.fetchLiveData();
+    });
   }
   void addNewProposition(String subject) {
 

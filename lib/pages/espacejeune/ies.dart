@@ -13,6 +13,7 @@ import 'SideBar/Settings.dart';
 import 'package:dio/dio.dart';
 import 'package:e_esg/api/api_Comsumer.dart';
 import 'package:e_esg/api/Dio_Consumer.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Ies extends  StatefulWidget {
   const Ies({super.key});
@@ -26,13 +27,26 @@ class IesState extends State<Ies> {
   late Future<void> _fetchDataFuture;
   double width=0;
   double height=0;
+  String? token;
+
+  Future<String?> getToken() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString('token');
+  }
 
   @override
   void initState() {
     super.initState();
+    initialize();
+  }
+
+  Future<void> initialize() async {
+    token = await getToken();
     final ApiComsumer apiConsumer = DioConsumer(dio: Dio());
-    _liveList = LiveList(apiConsumer: apiConsumer);
-    _fetchDataFuture = _liveList.fetchLiveData();
+    setState(() {
+      _liveList = LiveList(apiConsumer: apiConsumer, token: token);
+      _fetchDataFuture = _liveList.fetchLiveData();
+    });
   }
 
   void addNewProposition(String subject) {
@@ -339,4 +353,5 @@ class SuggestionBox extends StatelessWidget {
     );
   }
 }
+
 

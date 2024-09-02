@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:flutter_email_sender/flutter_email_sender.dart';
 import 'package:path_provider/path_provider.dart';
@@ -10,7 +9,6 @@ import 'SideBar/Settings.dart';
 import 'dart:typed_data';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 class Testpsy5 extends StatefulWidget {
   final String title;
@@ -81,25 +79,6 @@ class Testpsy5State extends State<Testpsy5> {
     return file;
   }
 
-  Future<void> savePDFtoDevice(File pdfFile) async {
-  final Directory? directory = await getExternalStorageDirectory();
-  if (directory != null) {
-    final String documentsPath = "${directory.path}/Documents";
-    final Directory documentsDirectory = Directory(documentsPath);
-
-    // Créer le dossier "Documents" s'il n'existe pas
-    if (!await documentsDirectory.exists()) {
-      await documentsDirectory.create(recursive: true);
-    }
-
-    final String filePath = "${documentsDirectory.path}/test_results.pdf";
-    final File newFile = await pdfFile.copy(filePath);
-    print("PDF saved to device at: $filePath");
-  } else {
-    print("Failed to get external storage directory");
-  }
-}
-
   void sendEmailWithPDF(File pdfFile) async {
     final Email email = Email(
       body: "Veuillez trouver ci-joint les résultats de votre test psychologique.",
@@ -116,16 +95,11 @@ class Testpsy5State extends State<Testpsy5> {
     }
   }
 
-  Future<void> onDownloadPDF() async {
+
+  void onDownloadPDF() async {
     try {
-      // Request storage permission
-      if (await Permission.storage.request().isGranted) {
-        File pdfFile = await generatePDF();
-        await savePDFtoDevice(pdfFile);
-        sendEmailWithPDF(pdfFile);
-      } else {
-        print("Storage permission not granted");
-      }
+      File pdfFile = await generatePDF();
+      sendEmailWithPDF(pdfFile);
     } catch (error) {
       print("Erreur lors de la génération du PDF: $error");
     }

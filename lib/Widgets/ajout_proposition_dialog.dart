@@ -125,3 +125,4 @@ class _AddPropositionDialogState extends State<AddPropositionDialog> {
     );
   }
 }
+

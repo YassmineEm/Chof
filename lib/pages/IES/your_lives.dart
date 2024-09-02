@@ -9,6 +9,7 @@ import 'package:e_esg/models/doctor.dart';
 import '../../api/api_Comsumer.dart';
 import '../../api/Dio_Consumer.dart';
 import 'package:dio/dio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class YourLives extends StatefulWidget {
   final Doctor doctor;
@@ -23,13 +24,26 @@ class _YourLivesState extends State<YourLives> {
   List<Live> _foundedLives = [];
   double sectionPadding = 16.0; 
   double titleFontSize = 20.0; 
+  String? token;
+
+  Future<String?> getToken() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString('tokenDoc');
+  }
 
   @override
   void initState() {
     super.initState();
+    initialize();
+  }
+
+  Future<void> initialize() async {
+    token = await getToken();
     final ApiComsumer apiConsumer = DioConsumer(dio: Dio());
-    _liveList = LiveList(apiConsumer: apiConsumer);
-    _fetchData();
+    setState(() {
+      _liveList = LiveList(apiConsumer: apiConsumer, token: token);
+      _fetchData();
+    });
   }
 
   Future<void> _fetchData() async {

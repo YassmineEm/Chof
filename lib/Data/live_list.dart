@@ -3,26 +3,21 @@ import 'package:e_esg/models/live.dart';
 import 'package:e_esg/api/api_Comsumer.dart';
 import 'package:e_esg/api/end_points.dart';
 import 'package:e_esg/models/doctor.dart';  
-import 'package:shared_preferences/shared_preferences.dart';
+
 
 class LiveList {
   final ApiComsumer apiConsumer;
+  final String? token;
 
-  LiveList({required this.apiConsumer});
+  LiveList({required this.apiConsumer,required this.token});
 
   List<Live> thisWeekLives = [];
   List<Live> allLives = [];
-  Map<Doctor, List<Live>> doctorLivesMap = {};  
+  Map<Doctor, List<Live>> doctorLivesMap = {}; 
+   
 
   Future<void> fetchLiveData() async {
     try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('token');
-
-      if (token == null) {
-        throw Exception('Token not found');
-      }
-
       final response = await apiConsumer.get(
         EndPoints.GetAllLives,
         queryParameters: {}, 

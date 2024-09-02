@@ -10,6 +10,7 @@ import '../../models/doctor.dart';
 import '../../api/api_Comsumer.dart';
 import '../../api/Dio_Consumer.dart';
 import 'package:dio/dio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class IesDoctor extends StatefulWidget {
   final Doctor doctor; 
@@ -30,14 +31,29 @@ class _IesDoctorState extends State<IesDoctor> {
   double width=0;
   double height=0;
 
+  String? token;
+
+  Future<String?> getToken() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString('tokenDoc');
+  }
+
 
   @override
   void initState() {
     super.initState();
-    final ApiComsumer apiConsumer = DioConsumer(dio: Dio());
-    _liveList = LiveList(apiConsumer: apiConsumer);
-    _fetchData();
+    initialize();
   }
+
+  Future<void> initialize() async {
+    token = await getToken();
+    final ApiComsumer apiConsumer = DioConsumer(dio: Dio());
+    setState(() {
+      _liveList = LiveList(apiConsumer: apiConsumer, token: token);
+      _fetchData();
+    });
+  }
+
 
   Future<void> _fetchData() async {
     await _liveList.fetchLiveData();

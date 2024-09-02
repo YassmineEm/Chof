@@ -1,8 +1,11 @@
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:e_esg/api/end_points.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'addMeeting.dart';
+import 'teleExpertise_Entry.dart';
 
 
 class Creatediscussion04 extends StatefulWidget {
@@ -14,7 +17,7 @@ class Creatediscussion04 extends StatefulWidget {
 }
 
 class _Creatediscussion04State extends State<Creatediscussion04> {
-  late bool boxCheck;
+  bool boxCheck=false;
 
 
   @override
@@ -153,8 +156,64 @@ class _Creatediscussion04State extends State<Creatediscussion04> {
                     style: const TextStyle(color: Colors.white, fontSize: 20),
                   ),
                 ),
-                onPressed: () {
-
+                onPressed: () async {
+                  SharedPreferences prefs = await SharedPreferences.getInstance();
+                  bool isDoc=prefs.getBool("isDoc")!;
+                  String? token =isDoc? prefs.getString('tokenDoc'):prefs.getString('tokenInf');
+                  await api.post(
+                    EndPoints.CreateDiscussion,
+                    data: {
+                      "titre": titre,
+                      "prenomPatient": prenomPatient,
+                      "nomPatient": nomPatient,
+                      "sexe": sexe.toUpperCase(),
+                      "age": age,
+                      "motifDeTeleExpertise": motifDeTeleExpertise,
+                      "antecedentsMedicaux": antecedentsMedicaux,
+                      "antecedentsChirurgicaux": antecedentsChirurgicaux,
+                      "habitudes": habitude,
+                      "descriptionDesHabitudes": descriptionDesHabitudes,
+                      "antecedentsFamiliaux":antecedentsFamiliaux,
+                      "descriptionEtatClinique": descriptionEtatClinique,
+                      "commentaireFichiers": "string",
+                      "genre": genre.toUpperCase(),
+                      "type": type,
+                      "date": date,
+                      "heure": heure,
+                      "fichiersAtaches": [],
+                      "medecinsInvitesIds": medecinsInvitesIds,
+                      "specialitesDemandees": specialitesDemandees,
+                      "medcinResponsableId": prefs.getInt("IdDoc")
+                    },
+                    headers: {
+                    "Authorization": "$token",
+                  },
+                  );
+                   titre="";
+                   motif="";
+                   prenomPatient="";
+                   nomPatient="";
+                   sexe="";
+                   age=0;
+                   motifDeTeleExpertise="";
+                   antecedentsMedicaux=[];
+                   antecedentsChirurgicaux="";
+                   habitude=[];
+                   descriptionDesHabitudes="";
+                   antecedentsFamiliaux=[];
+                   descriptionEtatClinique="";
+                   commentaireFichiers="";
+                   genre="";
+                   type="";
+                   date="";
+                   heure="";
+                   duree=0;
+                   status="";
+                   fichiersAtaches=[];
+                   medecinsInvitesIds=[];
+                   specialitesDemandees=[];
+                   medcinResponsableId=0;
+                  Navigator.of(context).pop();
                 },
               ),
             ),

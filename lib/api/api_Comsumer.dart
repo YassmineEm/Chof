@@ -6,14 +6,21 @@ abstract class ApiComsumer{
   });
   post(  String path,{
     Object? data,
-    Map<String,dynamic>?queryParameters,
+    Map<String,dynamic>?queryParameters, required Map<String, dynamic> headers,
+
   });
   patch(  String path,{
     Object? data,
     Map<String,dynamic>?queryParameters,
+    required Map<String, dynamic> headers,
+  });
+  put(  String path,{
+    Object? data,
+    Map<String,dynamic>?queryParameters, required Map<String, dynamic> headers,
   });
   delete(  String path,{
     Object? data,
     Map<String,dynamic>?queryParameters,
   });
+
 }
